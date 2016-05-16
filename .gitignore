@@ -1,5 +1,4 @@
 obj/
-bin/
 
 ipch/
 *.suo
@@ -10,9 +9,17 @@ ipch/
 *.obj
 *.tlog
 *.sdf
+*.db
 *.pdb
 *.idb
 *.pch
 Debug/
 Release/
 
+*.exe
+*.lib
+*.dll
+*.exp
+*.ilk
+*.ipdb
+*.iobj

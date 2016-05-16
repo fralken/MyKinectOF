@@ -8,8 +8,6 @@
 #define COLOR_HEIGHT 1080
 #define COLOR_SIZE COLOR_WIDTH * COLOR_HEIGHT
 
-#define HD
-
 #ifdef HD
 	#define FRAME_WIDTH COLOR_WIDTH
 	#define FRAME_HEIGHT COLOR_HEIGHT
@@ -41,8 +39,6 @@ void ofApp::setup(){
 	bHaveAllStreams = false;
 	bShowBodies = false;
 
-	//frameImg.allocate(FRAME_WIDTH, FRAME_HEIGHT, OF_IMAGE_COLOR_ALPHA);
-
 	//backgroundImg.loadImage("monument_valley.png");
 	//foregroundImg.loadImage("monument_valley-fg.png");
 	backgroundImg.loadImage("the_starry_night_1889.png");
@@ -52,7 +48,10 @@ void ofApp::setup(){
 	foregroundImg.resize(FRAME_WIDTH, FRAME_HEIGHT);
 
 	frameImg.clone(backgroundImg);
-	mappedCoords.resize(FRAME_WIDTH * FRAME_HEIGHT);
+
+#ifdef SHADER
+	shader.load("shaders/greenscreen");
+#endif
 }
 
 //--------------------------------------------------------------
@@ -87,17 +86,19 @@ void ofApp::update(){
 			}
 		}
 
+#ifndef SHADER
 		frameImg.clone(backgroundImg);
 
-#ifdef HD
+	#ifdef HD
 		greenScreenFromColorFrame(depthPix, bodyIndexPix, colorPix);
-#else
+	#else
 		greenScreenFromDepthFrame(depthPix, bodyIndexPix, colorPix);
-#endif
+	#endif
 
 		// Update the images since we manipulated the pixels manually. This uploads to the
 		// pixel data to the texture on the GPU so it can get drawn to screen
 		frameImg.update();
+#endif
 	}
 }
 
@@ -107,7 +108,8 @@ void ofApp::greenScreenFromDepthFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 	// More info here:
 	// https://msdn.microsoft.com/en-us/library/windowspreview.kinect.coordinatemapper.mapdepthframetocolorspace.aspx
 	// https://msdn.microsoft.com/en-us/library/dn785530.aspx
-	coordinateMapper->MapDepthFrameToColorSpace(DEPTH_SIZE, (UINT16*)depthPix.getPixels(), DEPTH_SIZE, (ColorSpacePoint*)mappedCoords.data());
+	kinect.getDepthSource()->getColorInDepthFrameMapping(coordMapping);
+	ofVec2f* mappedCoords = reinterpret_cast<ofVec2f*>(coordMapping.getData());
 
 	// Loop through the depth image
 	for (int y = 0; y < DEPTH_HEIGHT; y++) {
@@ -150,7 +152,8 @@ void ofApp::greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 	// More info here:
 	// https://msdn.microsoft.com/en-us/library/windowspreview.kinect.coordinatemapper.mapcolorframetodepthspace.aspx
 	// https://msdn.microsoft.com/en-us/library/dn785530.aspx
-	coordinateMapper->MapColorFrameToDepthSpace(DEPTH_SIZE, (UINT16*)depthPix.getPixels(), COLOR_SIZE, (DepthSpacePoint*)mappedCoords.data());
+	kinect.getDepthSource()->getDepthInColorFrameMapping(coordMapping);
+	ofVec2f* mappedCoords = reinterpret_cast<ofVec2f*>(coordMapping.getData());
 
 	for (int y = 0; y < COLOR_HEIGHT; y++) {
 		for (int x = 0; x < COLOR_WIDTH; x++) {
@@ -189,10 +192,32 @@ void ofApp::greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+#ifdef SHADER
+	if (bHaveAllStreams) {
+		kinect.getDepthSource()->getDepthInColorFrameMapping(coordMapping);
+		depthInColorMappingTex.allocate(coordMapping);
+		bodyIndexTex.allocate(kinect.getBodyIndexSource()->getPixels());
+	}
+
+	if (depthInColorMappingTex.isAllocated()) {
+		shader.begin();
+		shader.setUniformTexture("background", backgroundImg.getTextureReference(), 1);
+		shader.setUniformTexture("foreground", foregroundImg.getTextureReference(), 2);
+		shader.setUniformTexture("depthInColorMap", depthInColorMappingTex, 3);
+		shader.setUniformTexture("bodyIndex", bodyIndexTex, 4);
+
+		kinect.getColorSource()->getTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
+		shader.end();
+
+		if (bShowBodies)
+			kinect.getBodySource()->drawProjected(0, 0, ofGetWidth(), ofGetHeight(), PROJ_COORD);
+	}
+#else
 	frameImg.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
 	if (bShowBodies)
 		kinect.getBodySource()->drawProjected(0, 0, ofGetWindowWidth(), ofGetWindowHeight(), PROJ_COORD);
-	foregroundImg.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
+	foregroundImg.draw(0, 0, ofGetWidth(), ofGetHeight());
+#endif
 
 	stringstream ss;
 	ss << "fps : " << ofGetFrameRate() << endl;

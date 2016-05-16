@@ -5,6 +5,9 @@
 #include "ofxGui.h"
 #include "ofxKinectForWindows2.h"
 
+#define HD
+#define SHADER
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -31,7 +34,15 @@ class ofApp : public ofBaseApp{
 		ofImage backgroundImg;
 		ofImage frameImg;
 
-		vector<ofVec2f> mappedCoords;
+		ofFloatPixels coordMapping;
+
+#ifdef SHADER
+		ofShader shader;
+
+		ofTexture depthInColorMappingTex;
+		ofTexture bodyIndexTex;
+#endif
+
 		int numBodiesTracked;
 		bool bHaveAllStreams;
 		bool bShowBodies;

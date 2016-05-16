@@ -4,6 +4,9 @@
 //========================================================================
 int main() {
 	if (glfwInit()){
+		ofGLWindowSettings settings;
+		settings.setGLVersion(3, 2); //we define the OpenGL version we want to use
+
 		// for multi monitors with different DPI we must set DPI awareness 
 		// in the application Manifest (for all configurations -> debug, release)
 		// like so:
@@ -16,16 +19,18 @@ int main() {
 			glfwGetMonitorPos(monitors[1], &xpos, &ypos);
 			auto mode = glfwGetVideoMode(monitors[1]);
 
-			ofGLWindowSettings settings;
 			settings.width = mode->width;
 			settings.height = mode->height;
 			settings.setPosition(ofVec2f(xpos, ypos));
 			settings.windowMode = OF_WINDOW;
-			ofCreateWindow(settings);
 		}
 		else {
-			ofSetupOpenGL(1024, 768, OF_FULLSCREEN);			// <-------- setup the GL context
+			settings.width = 1920;
+			settings.height = 1080;
+			settings.windowMode = OF_FULLSCREEN;
 		}
+
+		ofCreateWindow(settings);
 
 		// this kicks off the running of my app
 		// can be OF_WINDOW or OF_FULLSCREEN

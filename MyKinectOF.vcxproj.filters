@@ -45,6 +45,9 @@
     <Filter Include="addons\ofxGui\src">
       <UniqueIdentifier>{5cc9ba60-ed7e-4f61-9c77-5cae92ee687d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{5b9fb39a-7152-4ea4-a210-dcd1acc6fd71}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ofApp.h">
@@ -80,5 +83,13 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\data\shaders\greenscreen.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="bin\data\shaders\greenscreen.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
