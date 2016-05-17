@@ -252,8 +252,8 @@ void ofApp::draw(){
 				frameRect.x, frameRect.y, frameRect.width, frameRect.height, PROJ_COORD);
 	}
 #else
-	frameImg.draw(r);
-	foregroundImg.draw(r);
+	frameImg.draw(frameRect);
+	foregroundImg.draw(frameRect);
 	if (bShowBodies)
 		kinect.getBodySource()->drawProjected(
 			frameRect.x, frameRect.y, frameRect.width, frameRect.height, PROJ_COORD);
