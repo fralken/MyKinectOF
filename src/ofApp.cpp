@@ -46,10 +46,8 @@ void ofApp::setup(){
 	backgroundImg.loadImage("the_starry_night_1889.png");
 	foregroundImg.loadImage("the_starry_night_1889-fg.png");
 
-	backgroundImg.resize(FRAME_WIDTH, FRAME_HEIGHT);
-	foregroundImg.resize(FRAME_WIDTH, FRAME_HEIGHT);
-
-	frameImg.clone(backgroundImg);
+	cropImage(backgroundImg);
+	cropImage(foregroundImg);
 
 #ifdef SHADER
 	#ifdef HD
@@ -57,6 +55,8 @@ void ofApp::setup(){
 	#else
 	shader.load("shaders/greenscreen.vert", "shaders/greenscreen_ld.frag");
 	#endif
+#else
+	frameImg.clone(backgroundImg);
 #endif
 
 	updateFrameRect(ofGetWidth(), ofGetHeight());
@@ -72,9 +72,9 @@ void ofApp::update(){
 		kinect.getBodySource()->isFrameNew() &&
 		kinect.getBodyIndexSource()->isFrameNew())
 	{
-		auto& depthPix = kinect.getDepthSource()->getPixels();
-		auto& bodyIndexPix = kinect.getBodyIndexSource()->getPixels();
-		auto& colorPix = kinect.getColorSource()->getPixels();
+		auto depthPix = kinect.getDepthSource()->getPixels();
+		auto bodyIndexPix = kinect.getBodyIndexSource()->getPixels();
+		auto colorPix = kinect.getColorSource()->getPixels();
 
 		// Make sure there's some data here, otherwise the cam probably isn't ready yet
 		if (!depthPix.size() || !bodyIndexPix.size() || !colorPix.size()) {
@@ -110,6 +110,7 @@ void ofApp::update(){
 	}
 }
 
+#ifndef SHADER
 void ofApp::greenScreenFromDepthFrame(ofShortPixelsRef depthPix, ofPixelsRef bodyIndexPix, ofPixelsRef colorPix)
 {
 	// Do the depth space -> color space mapping
@@ -197,6 +198,7 @@ void ofApp::greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 		}
 	}
 }
+#endif
 
 void ofApp::updateFrameRect(int width, int height) {
 	float widthRatio = (float)width / FRAME_WIDTH;
@@ -205,18 +207,43 @@ void ofApp::updateFrameRect(int width, int height) {
 	float w;
 	float h;
 	if (widthRatio < heightRatio) {
-		w = FRAME_WIDTH * widthRatio;
+		w = width;
 		h = FRAME_HEIGHT * widthRatio;
 	}
 	else {
 		w = FRAME_WIDTH * heightRatio;
-		h = FRAME_HEIGHT * heightRatio;
+		h = height;
 	}
 
 	float x = (width - w) / 2;
 	float y = (height - h) / 2;
 
 	frameRect.set(x, y, w, h);
+}
+
+void ofApp::cropImage(ofImage& image) {
+	float widthRatio = (float)FRAME_WIDTH / image.getWidth();
+	float heightRatio = (float)FRAME_HEIGHT / image.getHeight();
+
+	if (widthRatio != 1.0 || heightRatio != 1.0) {
+		float w;
+		float h;
+		if (widthRatio > heightRatio) {
+			w = FRAME_WIDTH;
+			h = image.getHeight() * widthRatio;
+		}
+		else {
+			w = image.getWidth() * heightRatio;
+			h = FRAME_HEIGHT;
+		}
+
+		image.resize(w, h);
+
+		float x = (w - FRAME_WIDTH) / 2;
+		float y = (h - FRAME_HEIGHT) / 2;
+
+		image.crop(x, y, FRAME_WIDTH, FRAME_HEIGHT);
+	}
 }
 
 //--------------------------------------------------------------

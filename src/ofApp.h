@@ -34,7 +34,6 @@ class ofApp : public ofBaseApp{
 
 		ofImage foregroundImg;
 		ofImage backgroundImg;
-		ofImage frameImg;
 
 		ofFloatPixels coordMapping;
 
@@ -43,14 +42,17 @@ class ofApp : public ofBaseApp{
 
 		ofTexture coordMappingTex;
 		ofTexture frameTex;
+#else
+		ofImage frameImg;
+
+		void greenScreenFromDepthFrame(ofShortPixelsRef depthPix, ofPixelsRef bodyIndexPix, ofPixelsRef colorPix);
+		void greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bodyIndexPix, ofPixelsRef colorPix);
 #endif
 
 		int numBodiesTracked;
 		bool bHaveAllStreams;
 		bool bShowBodies;
 
-		void greenScreenFromDepthFrame(ofShortPixelsRef depthPix, ofPixelsRef bodyIndexPix, ofPixelsRef colorPix);
-		void greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bodyIndexPix, ofPixelsRef colorPix);
-
 		void updateFrameRect(int width, int height);
+		void cropImage(ofImage& image);
 };
