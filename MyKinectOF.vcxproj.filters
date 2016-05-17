@@ -85,7 +85,10 @@
     <ResourceCompile Include="icon.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\data\shaders\greenscreen.frag">
+    <None Include="bin\data\shaders\greenscreen_hd.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="bin\data\shaders\greenscreen_ld.frag">
       <Filter>Shaders</Filter>
     </None>
     <None Include="bin\data\shaders\greenscreen.vert">

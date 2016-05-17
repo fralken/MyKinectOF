@@ -30,6 +30,8 @@ class ofApp : public ofBaseApp{
 		ofxKFW2::Device kinect;
 		ICoordinateMapper* coordinateMapper;
 
+		ofRectangle frameRect;
+
 		ofImage foregroundImg;
 		ofImage backgroundImg;
 		ofImage frameImg;
@@ -39,8 +41,8 @@ class ofApp : public ofBaseApp{
 #ifdef SHADER
 		ofShader shader;
 
-		ofTexture depthInColorMappingTex;
-		ofTexture bodyIndexTex;
+		ofTexture coordMappingTex;
+		ofTexture frameTex;
 #endif
 
 		int numBodiesTracked;
@@ -49,4 +51,6 @@ class ofApp : public ofBaseApp{
 
 		void greenScreenFromDepthFrame(ofShortPixelsRef depthPix, ofPixelsRef bodyIndexPix, ofPixelsRef colorPix);
 		void greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bodyIndexPix, ofPixelsRef colorPix);
+
+		void updateFrameRect(int width, int height);
 };

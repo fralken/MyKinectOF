@@ -238,8 +238,15 @@ C:\Users\Papillon\Source\of_v0.9.3_vs_release\addons\ofxGui\src;%(AdditionalIncl
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\data\shaders\greenscreen.frag" />
-    <None Include="bin\data\shaders\greenscreen.vert" />
+    <None Include="bin\data\shaders\greenscreen.vert">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="bin\data\shaders\greenscreen_hd.frag">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="bin\data\shaders\greenscreen_ld.frag">
+      <FileType>CppCode</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ProjectExtensions>

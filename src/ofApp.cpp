@@ -39,6 +39,8 @@ void ofApp::setup(){
 	bHaveAllStreams = false;
 	bShowBodies = false;
 
+	ofSetBackgroundColor(0, 0, 0);
+
 	//backgroundImg.loadImage("monument_valley.png");
 	//foregroundImg.loadImage("monument_valley-fg.png");
 	backgroundImg.loadImage("the_starry_night_1889.png");
@@ -50,8 +52,14 @@ void ofApp::setup(){
 	frameImg.clone(backgroundImg);
 
 #ifdef SHADER
-	shader.load("shaders/greenscreen");
+	#ifdef HD
+	shader.load("shaders/greenscreen.vert", "shaders/greenscreen_hd.frag");
+	#else
+	shader.load("shaders/greenscreen.vert", "shaders/greenscreen_ld.frag");
+	#endif
 #endif
+
+	updateFrameRect(ofGetWidth(), ofGetHeight());
 }
 
 //--------------------------------------------------------------
@@ -190,33 +198,65 @@ void ofApp::greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 	}
 }
 
+void ofApp::updateFrameRect(int width, int height) {
+	float widthRatio = (float)width / FRAME_WIDTH;
+	float heightRatio = (float)height / FRAME_HEIGHT;
+	
+	float w;
+	float h;
+	if (widthRatio < heightRatio) {
+		w = FRAME_WIDTH * widthRatio;
+		h = FRAME_HEIGHT * widthRatio;
+	}
+	else {
+		w = FRAME_WIDTH * heightRatio;
+		h = FRAME_HEIGHT * heightRatio;
+	}
+
+	float x = (width - w) / 2;
+	float y = (height - h) / 2;
+
+	frameRect.set(x, y, w, h);
+}
+
 //--------------------------------------------------------------
 void ofApp::draw(){
 #ifdef SHADER
 	if (bHaveAllStreams) {
+	#ifdef HD
 		kinect.getDepthSource()->getDepthInColorFrameMapping(coordMapping);
-		depthInColorMappingTex.allocate(coordMapping);
-		bodyIndexTex.allocate(kinect.getBodyIndexSource()->getPixels());
+		frameTex.allocate(kinect.getBodyIndexSource()->getPixels());
+	#else
+		kinect.getDepthSource()->getColorInDepthFrameMapping(coordMapping);
+		frameTex.allocate(kinect.getColorSource()->getPixels());
+	#endif
+		coordMappingTex.allocate(coordMapping);
 	}
 
-	if (depthInColorMappingTex.isAllocated()) {
+	if (coordMappingTex.isAllocated()) {
 		shader.begin();
 		shader.setUniformTexture("background", backgroundImg.getTextureReference(), 1);
 		shader.setUniformTexture("foreground", foregroundImg.getTextureReference(), 2);
-		shader.setUniformTexture("depthInColorMap", depthInColorMappingTex, 3);
-		shader.setUniformTexture("bodyIndex", bodyIndexTex, 4);
-
-		kinect.getColorSource()->getTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
+		shader.setUniformTexture("coordMapping", coordMappingTex, 3);
+	#ifdef HD
+		shader.setUniformTexture("bodyIndex", frameTex, 4);
+		kinect.getColorSource()->getTexture().draw(frameRect);
+	#else
+		shader.setUniformTexture("color", frameTex, 4);
+		kinect.getBodyIndexSource()->getTexture().draw(frameRect);
+	#endif
 		shader.end();
 
 		if (bShowBodies)
-			kinect.getBodySource()->drawProjected(0, 0, ofGetWidth(), ofGetHeight(), PROJ_COORD);
+			kinect.getBodySource()->drawProjected(
+				frameRect.x, frameRect.y, frameRect.width, frameRect.height, PROJ_COORD);
 	}
 #else
-	frameImg.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
+	frameImg.draw(r);
+	foregroundImg.draw(r);
 	if (bShowBodies)
-		kinect.getBodySource()->drawProjected(0, 0, ofGetWindowWidth(), ofGetWindowHeight(), PROJ_COORD);
-	foregroundImg.draw(0, 0, ofGetWidth(), ofGetHeight());
+		kinect.getBodySource()->drawProjected(
+			frameRect.x, frameRect.y, frameRect.width, frameRect.height, PROJ_COORD);
 #endif
 
 	stringstream ss;
@@ -270,7 +310,7 @@ void ofApp::mouseExited(int x, int y){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-
+	updateFrameRect(w, h);
 }
 
 //--------------------------------------------------------------

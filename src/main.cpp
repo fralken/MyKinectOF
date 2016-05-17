@@ -3,6 +3,8 @@
 
 //========================================================================
 int main() {
+	SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED | ES_CONTINUOUS);
+
 	if (glfwInit()){
 		ofGLWindowSettings settings;
 		settings.setGLVersion(3, 2); //we define the OpenGL version we want to use
@@ -39,4 +41,6 @@ int main() {
 
 		glfwTerminate();
 	}
+
+	SetThreadExecutionState(ES_CONTINUOUS);
 }
