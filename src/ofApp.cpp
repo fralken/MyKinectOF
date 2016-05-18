@@ -252,10 +252,8 @@ void ofApp::draw(){
 	if (bHaveAllStreams) {
 	#ifdef HD
 		kinect.getDepthSource()->getDepthInColorFrameMapping(coordMapping);
-		frameTex.allocate(kinect.getBodyIndexSource()->getPixels());
 	#else
 		kinect.getDepthSource()->getColorInDepthFrameMapping(coordMapping);
-		frameTex.allocate(kinect.getColorSource()->getPixels());
 	#endif
 		coordMappingTex.allocate(coordMapping);
 	}
@@ -266,10 +264,10 @@ void ofApp::draw(){
 		shader.setUniformTexture("foreground", foregroundImg.getTextureReference(), 2);
 		shader.setUniformTexture("coordMapping", coordMappingTex, 3);
 	#ifdef HD
-		shader.setUniformTexture("bodyIndex", frameTex, 4);
+		shader.setUniformTexture("bodyIndex", kinect.getBodyIndexSource()->getTexture(), 4);
 		kinect.getColorSource()->getTexture().draw(frameRect);
 	#else
-		shader.setUniformTexture("color", frameTex, 4);
+		shader.setUniformTexture("color", kinect.getColorSource()->getTexture(), 4);
 		kinect.getBodyIndexSource()->getTexture().draw(frameRect);
 	#endif
 		shader.end();

@@ -41,7 +41,6 @@ class ofApp : public ofBaseApp{
 		ofShader shader;
 
 		ofTexture coordMappingTex;
-		ofTexture frameTex;
 #else
 		ofImage frameImg;
 
