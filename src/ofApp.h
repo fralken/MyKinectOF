@@ -30,7 +30,9 @@ class ofApp : public ofBaseApp{
 		ofxKFW2::Device kinect;
 		ICoordinateMapper* coordinateMapper;
 
+		ofRectangle backgroundRect;
 		ofRectangle frameRect;
+		ofVec2f frameOffset;
 
 		ofImage foregroundImg;
 		ofImage backgroundImg;
@@ -53,5 +55,5 @@ class ofApp : public ofBaseApp{
 		bool bShowBodies;
 
 		void updateFrameRect(int width, int height);
-		void cropImage(ofImage& image);
+		void scaleImages(ofImage& background, ofImage& foreground);
 };

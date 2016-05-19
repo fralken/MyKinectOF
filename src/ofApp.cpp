@@ -46,8 +46,7 @@ void ofApp::setup(){
 	backgroundImg.loadImage("the_starry_night_1889.png");
 	foregroundImg.loadImage("the_starry_night_1889-fg.png");
 
-	cropImage(backgroundImg);
-	cropImage(foregroundImg);
+	scaleImages(backgroundImg, foregroundImg);
 
 #ifdef SHADER
 	#ifdef HD
@@ -148,7 +147,7 @@ void ofApp::greenScreenFromDepthFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 				{
 					// Finally, pull the color from the color image based on its coords in
 					// the depth image
-					frameImg.setColor(x, y, colorPix.getColor(colorX, colorY));
+					frameImg.setColor(x + frameOffset.x, y + frameOffset.y, colorPix.getColor(colorX, colorY));
 				}
 			}
 		}
@@ -191,7 +190,7 @@ void ofApp::greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 					// https://msdn.microsoft.com/en-us/library/windowspreview.kinect.bodyindexframe.aspx
 					int val = bodyIndexPix[depthIndex];
 					if (val != 0xff) {
-						frameImg.setColor(x, y, colorPix.getColor(x, y));
+						frameImg.setColor(x + frameOffset.x, y + frameOffset.y, colorPix.getColor(x, y));
 					}
 				}
 			}
@@ -201,48 +200,54 @@ void ofApp::greenScreenFromColorFrame(ofShortPixelsRef depthPix, ofPixelsRef bod
 #endif
 
 void ofApp::updateFrameRect(int width, int height) {
-	float widthRatio = (float)width / FRAME_WIDTH;
-	float heightRatio = (float)height / FRAME_HEIGHT;
+	float bgWidth = backgroundImg.getWidth();
+	float bgHeight = backgroundImg.getHeight();
+
+	float widthRatio = (float)width / bgWidth;
+	float heightRatio = (float)height / bgHeight;
 	
 	float w;
 	float h;
+	float ratio;
 	if (widthRatio < heightRatio) {
 		w = width;
-		h = FRAME_HEIGHT * widthRatio;
+		h = bgHeight * widthRatio;
+		ratio = widthRatio;
 	}
 	else {
-		w = FRAME_WIDTH * heightRatio;
+		w = bgWidth * heightRatio;
 		h = height;
+		ratio = heightRatio;
 	}
 
 	float x = (width - w) / 2;
 	float y = (height - h) / 2;
 
-	frameRect.set(x, y, w, h);
+	frameRect.set(x + frameOffset.x * ratio, y + frameOffset.y * ratio, FRAME_WIDTH * ratio, FRAME_HEIGHT * ratio);
+	backgroundRect.set(x, y, w, h);
 }
 
-void ofApp::cropImage(ofImage& image) {
-	float widthRatio = (float)FRAME_WIDTH / image.getWidth();
-	float heightRatio = (float)FRAME_HEIGHT / image.getHeight();
+void ofApp::scaleImages(ofImage& background, ofImage& foreground) {
+	float widthRatio = (float)FRAME_WIDTH / background.getWidth();
+	float heightRatio = (float)FRAME_HEIGHT / background.getHeight();
 
 	if (widthRatio != 1.0 || heightRatio != 1.0) {
 		float w;
 		float h;
 		if (widthRatio > heightRatio) {
 			w = FRAME_WIDTH;
-			h = image.getHeight() * widthRatio;
+			h = background.getHeight() * widthRatio;
 		}
 		else {
-			w = image.getWidth() * heightRatio;
+			w = background.getWidth() * heightRatio;
 			h = FRAME_HEIGHT;
 		}
 
-		image.resize(w, h);
+		background.resize(w, h);
+		foreground.resize(w, h);
 
-		float x = (w - FRAME_WIDTH) / 2;
-		float y = (h - FRAME_HEIGHT) / 2;
-
-		image.crop(x, y, FRAME_WIDTH, FRAME_HEIGHT);
+		frameOffset.x = (w - FRAME_WIDTH) / 2;
+		frameOffset.y = (h - FRAME_HEIGHT) / 2;
 	}
 }
 
@@ -260,16 +265,12 @@ void ofApp::draw(){
 
 	if (coordMappingTex.isAllocated()) {
 		shader.begin();
-		shader.setUniformTexture("background", backgroundImg.getTextureReference(), 1);
-		shader.setUniformTexture("foreground", foregroundImg.getTextureReference(), 2);
-		shader.setUniformTexture("coordMapping", coordMappingTex, 3);
-	#ifdef HD
-		shader.setUniformTexture("bodyIndex", kinect.getBodyIndexSource()->getTexture(), 4);
-		kinect.getColorSource()->getTexture().draw(frameRect);
-	#else
-		shader.setUniformTexture("color", kinect.getColorSource()->getTexture(), 4);
-		kinect.getBodyIndexSource()->getTexture().draw(frameRect);
-	#endif
+		shader.setUniform2f("frameOffset", frameOffset);
+		shader.setUniformTexture("color", kinect.getColorSource()->getTexture(), 1);
+		shader.setUniformTexture("bodyIndex", kinect.getBodyIndexSource()->getTexture(), 2);
+		shader.setUniformTexture("foreground", foregroundImg.getTextureReference(), 3);
+		shader.setUniformTexture("coordMapping", coordMappingTex, 4);
+		backgroundImg.draw(backgroundRect);
 		shader.end();
 
 		if (bShowBodies)
@@ -277,8 +278,8 @@ void ofApp::draw(){
 				frameRect.x, frameRect.y, frameRect.width, frameRect.height, PROJ_COORD);
 	}
 #else
-	frameImg.draw(frameRect);
-	foregroundImg.draw(frameRect);
+	frameImg.draw(backgroundRect);
+	foregroundImg.draw(backgroundRect);
 	if (bShowBodies)
 		kinect.getBodySource()->drawProjected(
 			frameRect.x, frameRect.y, frameRect.width, frameRect.height, PROJ_COORD);
