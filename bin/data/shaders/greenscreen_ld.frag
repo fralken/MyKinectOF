@@ -18,10 +18,10 @@ void main()
 	vec4 b = texture(tex0, texCoord);
 	vec4 f = texture(foreground, texCoord);
 
+	outputColor = b;
+
 	if (f.a == 0.0)
 	{
-		outputColor = b;
-
 		vec2 colorSize = textureSize(color);
 
 		if (texCoord.x >= frameOffset.x && texCoord.x < colorSize.x && texCoord.y >= frameOffset.y && texCoord.y < colorSize.y)
@@ -47,6 +47,4 @@ void main()
 			}
 		}
 	}
-	else
-		outputColor = f;
 }
