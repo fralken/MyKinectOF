@@ -1,5 +1,6 @@
 #include "ofMain.h"
 #include "ofApp.h"
+#include "GLFW/glfw3.h"
 
 //========================================================================
 int main() {
@@ -21,14 +22,12 @@ int main() {
 			glfwGetMonitorPos(monitors[1], &xpos, &ypos);
 			auto mode = glfwGetVideoMode(monitors[1]);
 
-			settings.width = mode->width;
-			settings.height = mode->height;
+			settings.setSize(mode->width, mode->height);
 			settings.setPosition(ofVec2f(xpos, ypos));
 			settings.windowMode = OF_WINDOW;
 		}
 		else {
-			settings.width = 1920;
-			settings.height = 1080;
+			settings.setSize(1920, 1080);
 			settings.windowMode = OF_FULLSCREEN;
 		}
 

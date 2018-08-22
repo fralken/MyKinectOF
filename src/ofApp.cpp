@@ -55,7 +55,7 @@ void ofApp::setup(){
 	shader.load("shaders/greenscreen.vert", "shaders/greenscreen_ld.frag");
 	#endif
 #else
-	frameImg.clone(backgroundImg);
+	frameImg = backgroundImg;
 #endif
 
 	updateFrameRect(ofGetWidth(), ofGetHeight());
@@ -94,7 +94,7 @@ void ofApp::update(){
 		}
 
 #ifndef SHADER
-		frameImg.clone(backgroundImg);
+		frameImg = backgroundImg;
 
 	#ifdef HD
 		greenScreenFromColorFrame(depthPix, bodyIndexPix, colorPix);
